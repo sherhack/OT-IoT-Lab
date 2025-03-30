@@ -1,0 +1,5 @@
+# Ignore any files with 'password' in the name
+*password*
+
+# Ignore any files with 'username' in the name
+*username*
