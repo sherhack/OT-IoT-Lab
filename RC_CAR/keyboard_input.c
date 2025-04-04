@@ -8,6 +8,11 @@ int motor2Pin1 = 5;
 int motor2Pin2 = 4; 
 int enable2Pin = 0; 
 
+
+// Pela numeração do GPIO:
+int LED_FRONT  D8
+int LED_BACK   1
+
 // Setting minimum duty cycle
 int dutyCycle = 60;
 
@@ -16,6 +21,9 @@ void setup() {
   // Initialize serial communication at 9600 baud rate
   Serial.begin(9600);
   Serial.println("Press an arrow key to see which one was pressed!");
+  
+  pinMode(LED_FRONT, OUTPUT);
+  pinMode(LED_BACK, OUTPUT);
 
   // sets the pins as outputs:
   pinMode(motor1Pin1, OUTPUT);
@@ -25,8 +33,6 @@ void setup() {
   pinMode(motor2Pin1, OUTPUT);
   pinMode(motor2Pin2, OUTPUT);
   pinMode(enable2Pin, OUTPUT);
-
-  //Serial.begin(115200);
 
   // testing
   Serial.print("Testing DC Motor...");
@@ -46,6 +52,7 @@ void loop() {
     switch (incomingByte) {
       case 119: // Up arrow (may need adjustment based on your system)
         Serial.println("Moving Forward");
+        digitalWrite(LED_FRONT, HIGH);
         digitalWrite(motor1Pin1, LOW);
         digitalWrite(motor1Pin2, HIGH);
         break;
@@ -58,6 +65,7 @@ void loop() {
       
       case 115: // Down arrow
         Serial.println("Down Arrow Pressed");
+        digitalWrite(LED_BACK, HIGH);
         digitalWrite(motor1Pin1, HIGH);
         digitalWrite(motor1Pin2, LOW);
         break;

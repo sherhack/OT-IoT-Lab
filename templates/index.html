@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RC Car Control</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+            -webkit-user-select: none; /* Prevent text selection on Webkit (Safari, Chrome) */
+            -moz-user-select: none;    /* Firefox */
+            -ms-user-select: none;     /* IE/Edge */
+            user-select: none;         /* Standard */
+        }
+        #status {
+            margin-top: 20px;
+            color: #333;
+        }
+        .control-buttons {
+            margin-top: 20px;
+        }
+        button {
+            padding: 15px 30px;
+            margin: 5px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            touch-action: manipulation; /* Improves touch response */
+            -webkit-tap-highlight-color: transparent; /* Removes tap highlight on mobile */
+        }
+        button:active {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>RC Car Control</h1>
+    <p>Use arrow keys (desktop) or buttons (mobile) to control the car:</p>
+    <p>Up/Forward, Down/Backward, Left, Right - Release keys or tap Stop to stop</p>
+    
+    <div class="control-buttons">
+        <button id="forward" onmousedown="startCommand('backward', event)" onmouseup="stopCommand()" ontouchstart="startCommand('backward', event)" ontouchend="stopCommand()" oncontextmenu="return false;">Forward</button><br>
+        <button id="left" onmousedown="startCommand('left', event)" onmouseup="stopCommand()" ontouchstart="startCommand('left', event)" ontouchend="stopCommand()" oncontextmenu="return false;">Left</button>
+        <button id="stop" onmousedown="stopCommand()" ontouchstart="stopCommand()" oncontextmenu="return false;">Stop</button>
+        <button id="right" onmousedown="startCommand('right', event)" onmouseup="stopCommand()" ontouchstart="startCommand('right', event)" ontouchend="stopCommand()" oncontextmenu="return false;">Right</button><br>
+        <button id="backward" onmousedown="startCommand('forward', event)" onmouseup="stopCommand()" ontouchstart="startCommand('forward', event)" ontouchend="stopCommand()" oncontextmenu="return false;">Backward</button>
+    </div>
+    
+    <p id="status">Status: Waiting for input</p>
+
+    <script>
+        // Track active command
+        let activeCommand = null;
+
+        // Function to send command to Flask server
+        function sendCommand(command) {
+            $.ajax({
+                url: '/control',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({command: command}),
+                success: function(response) {
+                    $('#status').text('Status: ' + response.status + ' - Command: ' + response.command);
+                },
+                error: function(xhr, status, error) {
+                    $('#status').text('Error: ' + xhr.responseJSON.error);
+                }
+            });
+        }
+
+        // Start a command (for buttons)
+        function startCommand(command, event) {
+            event.preventDefault(); // Prevent default behavior (e.g., text selection)
+            if (command !== activeCommand) {
+                activeCommand = command;
+                sendCommand(activeCommand);
+            }
+        }
+
+        // Stop the car (for buttons and keys)
+        function stopCommand() {
+            if (activeCommand) {
+                activeCommand = null;
+                sendCommand('stop');
+            }
+        }
+
+        // Handle key press (for desktop)
+        $(document).keydown(function(event) {
+            let newCommand = null;
+
+            switch(event.which) {
+                case 38: // Up arrow
+                    newCommand = 'backward';
+                    break;
+                case 40: // Down arrow
+                    newCommand = 'forward';
+                    break;
+                case 37: // Left arrow
+                    newCommand = 'left';
+                    break;
+                case 39: // Right arrow
+                    newCommand = 'right';
+                    break;
+                default:
+                    return;
+            }
+            console.log(newCommand)
+            event.preventDefault();
+            if (newCommand && newCommand !== activeCommand) {
+                activeCommand = newCommand;
+                sendCommand(activeCommand);
+            }
+        });
+
+        // Handle key release (for desktop)
+        $(document).keyup(function(event) {
+            switch(event.which) {
+                case 38: // Up arrow
+                    if (activeCommand === 'backward') stopCommand();
+                    break;
+                case 40: // Down arrow
+                    if (activeCommand === 'forward') stopCommand();
+                    break;
+                case 37: // Left arrow
+                    if (activeCommand === 'left') stopCommand();
+                    break;
+                case 39: // Right arrow
+                    if (activeCommand === 'right') stopCommand();
+                    break;
+            }
+        });
+
+        // Stop if window loses focus
+        $(window).blur(function() {
+            stopCommand();
+        });
+    </script>
+</body>
+</html>
